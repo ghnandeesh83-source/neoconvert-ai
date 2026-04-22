@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Globe, Rocket, Map, Bot, Activity, Atom, Shield, Zap, LogOut, User } from 'lucide-react';
+import { Brain, Globe, Rocket, Map, Bot, Activity, Atom, Shield, Zap, LogOut, User, Plane, Wallet, Receipt, Accessibility, Globe2 } from 'lucide-react';
 import MainConverter from './components/MainConverter';
 import AIFinancialTwin from './components/AIFinancialTwin';
 import UniversalValueIndex from './components/UniversalValueIndex';
@@ -10,11 +10,16 @@ import AutonomousAgent from './components/AutonomousAgent';
 import BioAdaptive from './components/BioAdaptive';
 import QuantumPrediction from './components/QuantumPrediction';
 import EthicalAnalysis from './components/EthicalAnalysis';
+import TravelMode from './components/TravelMode';
+import CostOfLiving from './components/CostOfLiving';
+import ReceiptSplit from './components/ReceiptSplit';
+import AccessibilityMode from './components/AccessibilityMode';
+import CurrencyMap from './components/CurrencyMap';
 import Hero from './components/Hero';
 import Login from './components/Login';
 import axios from 'axios';
 
-export type AppMode = 'converter' | 'twin' | 'universal' | 'space' | 'reality' | 'agent' | 'bio' | 'quantum' | 'ethical';
+export type AppMode = 'converter' | 'twin' | 'universal' | 'space' | 'reality' | 'agent' | 'bio' | 'quantum' | 'ethical' | 'travel' | 'costofliving' | 'receiptsplit' | 'accessibility' | 'currencymap';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<AppMode>('converter');
@@ -91,6 +96,11 @@ const App: React.FC = () => {
     { id: 'bio' as AppMode, label: 'Bio', icon: Activity, color: 'from-rose-500 to-pink-500' },
     { id: 'quantum' as AppMode, label: 'Quantum', icon: Atom, color: 'from-violet-500 to-purple-500' },
     { id: 'ethical' as AppMode, label: 'Ethical', icon: Shield, color: 'from-emerald-500 to-teal-500' },
+    { id: 'travel' as AppMode, label: 'Travel', icon: Plane, color: 'from-sky-500 to-blue-500' },
+    { id: 'costofliving' as AppMode, label: 'Cost Living', icon: Wallet, color: 'from-amber-500 to-orange-500' },
+    { id: 'receiptsplit' as AppMode, label: 'Split Bill', icon: Receipt, color: 'from-pink-500 to-rose-500' },
+    { id: 'accessibility' as AppMode, label: 'Accessible', icon: Accessibility, color: 'from-indigo-500 to-purple-500' },
+    { id: 'currencymap' as AppMode, label: 'Map', icon: Globe2, color: 'from-teal-500 to-cyan-500' },
   ];
 
   const renderContent = () => {
@@ -104,6 +114,11 @@ const App: React.FC = () => {
       case 'bio': return <BioAdaptive />;
       case 'quantum': return <QuantumPrediction />;
       case 'ethical': return <EthicalAnalysis />;
+      case 'travel': return <TravelMode />;
+      case 'costofliving': return <CostOfLiving />;
+      case 'receiptsplit': return <ReceiptSplit />;
+      case 'accessibility': return <AccessibilityMode />;
+      case 'currencymap': return <CurrencyMap />;
       default: return <MainConverter />;
     }
   };

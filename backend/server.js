@@ -21,6 +21,47 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// Currency API Integration
+const EXCHANGE_RATE_API_KEY = process.env.EXCHANGE_RATE_API_KEY || 'demo';
+const CURRENCY_API_URL = `https://v6.exchangerate-api.com/v6/${EXCHANGE_RATE_API_KEY}`;
+
+// Cache for exchange rates (5 minute TTL)
+const exchangeRateCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getExchangeRates(fromCurrency) {
+  const cacheKey = fromCurrency;
+  const cached = exchangeRateCache.get(cacheKey);
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  
+  try {
+    const response = await axios.get(`${CURRENCY_API_URL}/latest/${fromCurrency}`);
+    const data = response.data;
+    
+    if (data.result === 'success') {
+      exchangeRateCache.set(cacheKey, {
+        data: data.conversion_rates,
+        timestamp: Date.now()
+      });
+      return data.conversion_rates;
+    }
+  } catch (error) {
+    console.error('Currency API error:', error.message);
+  }
+  
+  // Fallback to mock rates if API fails
+  return {
+    USD: 1,
+    EUR: 0.85,
+    GBP: 0.73,
+    INR: 83.5,
+    JPY: 110.0
+  };
+}
+
 // Session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET || 'neoconvert-secret-key',
@@ -153,52 +194,40 @@ app.post('/api/convert', async (req, res) => {
           type: 'space', 
           rate, 
           spaceLocation: to,
-          resourceBased: true,
-          helium3Price: 50000 // per kg
+          resourceBased: true
         };
         break;
         
       case 'quantum':
-        // Simulate quantum superposition with 3 outcomes
-        const baseRate = realRates[from]?.[to] || 1;
-        convertedAmount = amount * baseRate;
-        metadata = {
-          type: 'quantum',
-          scenarios: {
-            best: { rate: baseRate * 1.05, amount: amount * baseRate * 1.05, probability: 0.25 },
-            expected: { rate: baseRate, amount: amount * baseRate, probability: 0.50 },
-            worst: { rate: baseRate * 0.95, amount: amount * baseRate * 0.95, probability: 0.25 }
-          },
-          superposition: true
+        const uncertainty = (Math.random() - 0.5) * 0.1;
+        rate = (Math.random() * 2) + uncertainty;
+        convertedAmount = amount * rate;
+        metadata = { 
+          type: 'quantum', 
+          rate, 
+          uncertainty: uncertainty.toFixed(4),
+          quantumEffect: true
         };
         break;
         
       default:
-        rate = realRates[from]?.[to] || 1;
-        convertedAmount = amount * rate;
+        rate = 1;
+        convertedAmount = amount;
+        metadata = { type: 'unknown', rate: 1 };
     }
     
-    // Log conversion
-    const conversion = {
-      id: uuidv4(),
-      timestamp: new Date(),
-      from, to, amount, convertedAmount, mode, metadata
+    result = {
+      original: { amount, currency: from },
+      converted: { amount: convertedAmount, currency: to },
+      rate: rate.toFixed(4),
+      timestamp: new Date().toISOString(),
+      metadata
     };
-    conversions.push(conversion);
-    
-    res.json({
-      success: true,
-      data: {
-        original: { amount, currency: from },
-        converted: { amount: convertedAmount.toFixed(2), currency: to },
-        rate,
-        mode,
-        metadata,
-        timestamp: conversion.timestamp
-      }
-    });
+
+    res.json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error('Conversion error:', error);
+    res.status(500).json({ success: false, error: 'Conversion failed' });
   }
 });
 
